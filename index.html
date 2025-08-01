@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Chain Game</title>
+  <style>
+    :root {
+      --bg-color: #f7f7f7;
+      --text-color: #333;
+      --box-bg: #fff;
+      --input-border: #ddd;
+      --btn-bg: #4CAF50;
+      --btn-hover-bg: #f1f0f0;
+      --btn-hover-text: #000;
+      --user-msg-bg: #dcf8c6;
+      --bot-msg-bg: #f1f0f0;
+    }
+
+    body.dark {
+      --bg-color: #1e1e1e;
+      --text-color: #e0e0e0;
+      --box-bg: #2c2c2c;
+      --input-border: #555;
+      --btn-bg: #00897b;
+      --btn-hover-bg: #004d40;
+      --btn-hover-text: #fff;
+      --user-msg-bg: #33691e;
+      --bot-msg-bg: #37474f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      flex-direction: column;
+      transition: background 0.3s, color 0.3s;
+    }
+    h1 { font-size: 2.5em; margin-bottom: 20px; }
+    .game-container {
+      width: 100%; max-width: 900px;
+      padding: 20px;
+      background: var(--box-bg);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+    .input-group { margin-bottom: 20px; }
+    .input-group input {
+      padding: 10px;
+      width: 100%;
+      border: 2px solid var(--input-border);
+      border-radius: 5px;
+      font-size: 1.2em;
+      margin-top: 10px;
+      background: inherit;
+      color: inherit;
+    }
+    button {
+      background-color: var(--btn-bg);
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 40px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: var(--btn-hover-bg);
+      color: var(--btn-hover-text);
+    }
+    .chat-box {
+      margin-top: 20px;
+      text-align: left;
+      font-size: 1.1em;
+      border-top: 2px solid var(--input-border);
+      padding-top: 10px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    .user-message, .bot-message {
+      padding: 10px;
+      display: inline-block;
+      max-width: 80%;
+      clear: both;
+      margin-bottom: 10px;
+    }
+    .user-message {
+      background-color: var(--user-msg-bg);
+      border-radius: 30px;
+      float: right;
+    }
+    .bot-message {
+      background-color: var(--bot-msg-bg);
+      border-radius: 10px;
+      float: left;
+    }
+    .bot-message em, .user-message em { font-size: 0.85em; color: #ccc; }
+    .meaning-text { font-size: 0.8em; color: #000000; }
+    .menu-icon, .theme-toggle {
+      font-size: 24px;
+      position: absolute;
+      top: 20px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+body.dark .meaning-text {
+  color: #ffffff;
+}
+.bot-message em, .user-message em {
+  font-size: 0.85em;
+  color: #000000; 
+}
+
+body.dark .bot-message em,
+body.dark .user-message em {
+  color: #ffffff; 
+}
+
+    .menu-icon {
+      left: 20px;
+      background-color: var(--btn-bg);
+      color: white;
+    }
+    .theme-toggle {
+      right: 20px;
+      background-color: var(--btn-bg);
+      color: white;
+    }
+    .saved-chat-popup {
+      display: none;
+      position: fixed;
+      top: 80px;
+      left: 20px;
+      width: 320px;
+      max-height: 80vh;
+      background-color: var(--box-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      padding: 20px;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .close-btn {
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .chat-box-style div.chat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .chat-box-style button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .chat-box-style .load-btn {
+      background-color: var(--btn-bg);
+      color: white;
+      flex: 1;
+    }
+    .chat-box-style .del-btn {
+      background-color: red;
+      color: white;
+      margin-left: 5px;
+    }
+    @media (max-width: 600px) {
+      .game-container { padding: 20px 10px; }
+      h1 { font-size: 1.8em; }
+      .input-group input { font-size: 1em; }
+      button { padding: 10px 20px; font-size: 1em; }
+      .saved-chat-popup { width: 90vw; left: 5vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle" onclick="toggleTheme()" id="themeIcon">🌙</div>
+<h1>Word Chain Inspired By Ai</h1>
+<div class="game-container">
+  <div class="input-group">
+    <label for="userInput">Enter a word:</label>
+    <input type="text" id="userInput" placeholder="Type a word">
+  </div>
+  <button id="sendWordBtn">Send Word</button>
+  <button onclick="clearChat()">Clear Chat</button>
+  <button id="saveChatBtn">Save Chat</button>
+  <div class="menu-icon" onclick="toggleSavedChat()">≡</div>
+
+  <div id="savedChatPopup" class="saved-chat-popup">
+    <div class="popup-header">
+      <h3>Saved Chats</h3>
+      <button onclick="closeSavedChat()" class="close-btn">✖</button>
+    </div>
+    <div id="savedChatContent" class="chat-box-style"></div>
+    <button onclick="clearAllSavedChats()" style="margin-top: 10px; background-color: black; color: white; padding: 8px 16px; border-radius: 20px; border: none;"> Clear All Saved</button>
+  </div>
+
+  <div class="chat-box" id="chatBox"></div>
+</div>
+
+<script>
+const userInput = document.getElementById('userInput');
+const sendWordBtn = document.getElementById('sendWordBtn');
+const chatBox = document.getElementById('chatBox');
+const saveChatBtn = document.getElementById('saveChatBtn');
+let usedWords = new Set();
+
+    function toggleTheme() {
+      const body = document.body;
+      const icon = document.getElementById('themeIcon');
+      body.classList.toggle('dark');
+      icon.textContent = body.classList.contains('dark') ? '☀️' : '🌙';
+    }
+
+async function checkGrammar(text) {
+  const response = await fetch("https://api.languagetool.org/v2/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      text: text,
+      language: "en-US"
+    })
+  });
+
+  const result = await response.json();
+  return result.matches.map(match => match.message).join("\n") || "No grammar issues.";
+}
+
+function updateSavedPopup() {
+  const popup = document.getElementById('savedChatPopup');
+  const content = document.getElementById('savedChatContent');
+  const savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
+
+  content.innerHTML = "";
+
+  if (savedChats.length === 0) {
+    content.innerHTML = "<p><em>No saved chats found.</em></p>";
+  } else {
+    savedChats.forEach(chat => {
+      const row = document.createElement('div');
+      row.className = 'chat-item';
+
+      const loadBtn = document.createElement('button');
+      loadBtn.textContent = chat.name;
+      loadBtn.className = 'load-btn';
+      loadBtn.onclick = () => {
+        chatBox.innerHTML = chat.content;
+        popup.style.display = 'none';
+        saveChat();
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '🗑️';
+      delBtn.className = 'del-btn';
+      delBtn.onclick = () => deleteChatById(chat.id);
+
+      row.appendChild(loadBtn);
+      row.appendChild(delBtn);
+      content.appendChild(row);
+    });
+  }
+}
+
+function saveChatManually() {
+  let savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
+  const newChat = {
+    id: Date.now(),
+    name: `Chat ${savedChats.length + 1}`,
+    content: chatBox.innerHTML
+  };
+  savedChats.push(newChat);
+  localStorage.setItem('savedChats', JSON.stringify(savedChats));
+  alert("✅ Chat saved as " + newChat.name);
+  updateSavedPopup();
+}
+
+saveChatBtn.addEventListener('click', saveChatManually);
+
+function deleteChatById(id) {
+  let savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
+  savedChats = savedChats.filter(chat => chat.id !== id);
+  localStorage.setItem('savedChats', JSON.stringify(savedChats));
+  updateSavedPopup();
+}
+
+function clearAllSavedChats() {
+  if (confirm("Are you sure you want to delete all saved chats?")) {
+    localStorage.removeItem('savedChats');
+    updateSavedPopup();
+  }
+}
+
+function clearChat() {
+  localStorage.removeItem('chatHistory');
+  chatBox.innerHTML = '';
+  usedWords.clear();
+}
+
+function saveChat() {
+  localStorage.setItem('chatHistory', chatBox.innerHTML);
+}
+
+function loadChat() {
+  const saved = localStorage.getItem('chatHistory');
+  if (saved) chatBox.innerHTML = saved;
+}
+
+function toggleSavedChat() {
+  const popup = document.getElementById('savedChatPopup');
+  if (popup.style.display === 'block') {
+    popup.style.display = 'none';
+    return;
+  }
+  updateSavedPopup();
+  popup.style.display = 'block';
+}
+
+function closeSavedChat() {
+  document.getElementById('savedChatPopup').style.display = 'none';
+}
+
+async function getRealWordStartingWith(letter) {
+  const res = await fetch(`https://api.datamuse.com/words?sp=${letter}*&max=50`);
+  const data = await res.json();
+  return data.length > 0 ? data[Math.floor(Math.random() * data.length)].word : "I can't find a word!";
+}
+
+
+async function getMeaning(word) {
+  const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+  if (!response.ok) return "Meaning not found.";
+  const data = await response.json();
+  return data[0]?.meanings?.[0]?.definitions?.[0]?.definition || "Meaning not found.";
+}
+
+async function sendWord() {
+  const userWord = userInput.value.trim().toLowerCase();
+  if (!userWord) {
+    alert("Please enter a word!");
+    return;
+  }
+  if (usedWords.has(userWord)) {
+    alert(`⚠️ The word "${userWord}" was already used! Try a different one.`);
+    return;
+  }
+
+  usedWords.add(userWord);
+  const userMeaning = await getMeaning(userWord);
+  chatBox.innerHTML += `
+    <div class="user-message">
+      <strong>You:</strong> ${userWord}<br>
+      <em>Meaning:</em> <span class="meaning-text">${userMeaning}</span>
+    </div>`;
+
+  const lastLetter = userWord.slice(-1);
+  const botWord = await getRealWordStartingWith(lastLetter);
+  usedWords.add(botWord.toLowerCase());
+  const botMeaning = await getMeaning(botWord);
+  chatBox.innerHTML += `
+    <div class="bot-message">
+      <strong>AI Bot:</strong> ${botWord}<br>
+      <em>Meaning:</em> <span class="meaning-text">${botMeaning}</span>
+    </div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+  userInput.value = '';
+  saveChat();
+}
+
+sendWordBtn.addEventListener('click', sendWord);
+userInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendWord();
+});
+window.onload = loadChat;
+</script>
+</body>
+</html>
